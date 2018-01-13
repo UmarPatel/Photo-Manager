@@ -1,0 +1,40 @@
+package UserInterface.Backend;
+
+import java.util.ArrayList;
+
+public class RootDirectory {
+    private ArrayList<Directory> directoryList;
+
+    RootDirectory(Directory directories) {
+        this.directoryList.add(directories);
+        addAbsentTags();
+    }
+
+    private void addAbsentTags() {
+        if (this.directoryList != null) {
+            for (Directory dir : this.directoryList) {
+                dir.add_absent_tags();
+            }
+        }
+    }
+
+    private void moveFile(ImageFile file_under_root, Directory from, Directory new_directory) {
+        //You're gonna have to pick the exact file from the exact directory to move to a new directory
+        //in the caller since it's impossible to trace where an image is in which directory
+        new_directory.addImageFile(file_under_root, file_under_root.OS);
+        from.deleteImage(file_under_root, file_under_root.OS);
+    }
+
+    private ArrayList<ImageFile> allImages() {
+        ArrayList images = new ArrayList<ImageFile>();
+        if (this.directoryList != null) {
+            for (Directory dir : this.directoryList) {
+                images.add(dir.allImages());
+            }
+        } else {
+            return null;
+        }
+        return images;
+    }
+
+}
