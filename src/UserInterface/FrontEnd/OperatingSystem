@@ -1,0 +1,244 @@
+package UserInterface;//
+// Source code recreated from a .class file by IntelliJ IDEA
+// (powered by Fernflower decompiler)
+//
+
+import UserInterface.Backend.Directory;
+import UserInterface.Backend.ImageFile;
+import javafx.collections.ObservableList;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+
+public class OperatingSystem {
+    private ArrayList log = new ArrayList();
+    public ArrayList<String> tags = new ArrayList<String>();
+    ArrayList directories = new ArrayList();
+
+
+    public OperatingSystem(ArrayList<Directory> list_dir) throws IOException {
+        textRead();
+        if (list_dir != null) {
+            this.getDirectories().addAll(list_dir);
+            ArrayList<ImageFile> allImages = new ArrayList<>();
+        }
+
+        try {
+            this.create();
+        } catch (Exception var3) {
+            var3.printStackTrace();
+        }
+
+    }
+
+    /**
+     * Searches a directory for the file name
+     * @param file_name
+     * @return file name if file exists, else null
+     */
+
+    public Directory search(String file_name) {
+        Directory result = null;
+        Iterator var3 = this.getDirectories().iterator();
+
+        while (var3.hasNext()) {
+            Directory curr_dir = (Directory) var3.next();
+            if (curr_dir.getName().equals(file_name)) {
+                result = curr_dir;
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * gives a directory name and the files mapped to that directory name,
+     * creates a new directory
+     * @param directory_name
+     * @param files
+     */
+
+    public void createDirectory(String directory_name, ArrayList<ImageFile> files) {
+        boolean exist = false;
+        Iterator var3 = this.getDirectories().iterator();
+
+        while (var3.hasNext()) {
+            Directory d = (Directory) var3.next();
+            if (d.getName().equals(directory_name)) {
+                exist = true;
+                AlertBox.displayText("Warning", "That directory name already exists");
+            }
+        }
+
+        if (!exist) {
+            Directory new_dir = new Directory(directory_name, files, null);
+            this.getDirectories().add(new_dir);
+        }
+
+    }
+
+    /**
+     * given a directory name, deletes that directory name
+     * @param directory_name
+     */
+
+    public void deleteDirectory(ObservableList<Directory> directory_name) {
+        this.getDirectories().removeAll(directory_name);
+        for (Directory curr : directory_name) {
+            curr.delFolder();
+        }
+    }
+
+    /**
+     * given a directory name, file name and new directory, moves the image files from the file name
+     * to the new directory
+     * @param directory_name
+     * @param file_name
+     * @param new_directory
+     */
+
+    private void move(Directory directory_name, ImageFile file_name, Directory new_directory) {
+        directory_name.moveImageFile(file_name, new_directory, this);
+    }
+
+    /**
+     * shows the log of all changes for the directories
+     * @return list
+     */
+    private ArrayList<ArrayList<String>> view_log() {
+        return this.log;
+    }
+
+    /**
+     * given the old name, new name and time, adds to the log what the old name was, what the old name turned
+     * into with the new name and the time in which this occured
+     * @param oldName
+     * @param newName
+     * @param time
+     */
+    public void addLog(String oldName, String newName, String time) {
+        ArrayList<String> curr_log = new ArrayList();
+        curr_log.add(oldName);
+        curr_log.add(newName);
+        curr_log.add(time);
+        this.log.add(curr_log);
+    }
+
+    /**
+     * returns the log of all changes
+     * @return
+     */
+
+    public ArrayList<ArrayList<String>> get_log() {
+        return this.log;
+    }
+
+    /**
+     * given a tag name, adds the tag to the list of all available tag
+     * @param newTag
+     */
+
+    public void addTag(String newTag) {
+        if (!(this.tags.contains(newTag))) {
+            this.tags.add(newTag);
+
+            try {
+                this.textWrite(newTag);
+            } catch (Exception var3) {
+                var3.printStackTrace();
+            }
+        }
+
+    }
+
+    /**
+     * helper function to read all tags for add tag
+     * @throws IOException
+     */
+
+    private void textRead() throws IOException {
+        FileReader filereader = new FileReader("tags.txt");
+        BufferedReader reader = new BufferedReader(filereader);
+        String line;
+        while ((line = reader.readLine()) != null) {
+            addTag(line);
+        }
+    }
+
+    /**
+     * another helper function to write the names of all previous tags to help keep track of all tag names
+     * @param tag
+     * @throws IOException
+     */
+
+    private void textWrite(String tag) throws IOException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter("tags.txt"));
+
+        try {
+            for (int i = 0; i != this.tags.size(); ++i) {
+                writer.write((String) this.tags.get(i));
+                writer.newLine();
+            }
+
+            writer.close();
+        } catch (Exception var4) {
+            var4.printStackTrace();
+        }
+
+        writer.close();
+    }
+
+    /** helper function to write file tag names
+     * @throws Exception
+     */
+
+    private void create() throws Exception {
+        PrintWriter saved_tags = new PrintWriter("tags.txt", "UTF-8");
+    }
+
+    /**
+     * returns all directories that exist
+     * @return list
+     */
+    public ArrayList viewDirectory() {
+        return this.getDirectories();
+    }
+
+    /**
+     * return all directories that exist
+     * @return list
+     */
+    private ArrayList getDirectories() {
+        return directories;
+    }
+
+    /**
+     * given two directories, merge all contents within both directories
+     * @param d1
+     * @param d2
+     */
+
+    public void merge(Directory d1, Directory d2) {
+        ArrayList<ImageFile> contents = d2.viewImageFiles();
+        if (contents.size() != 0) {
+            try {
+                for (ImageFile curr_cont : contents) {
+                    d2.moveImageFile(curr_cont, d1, this);
+                }
+            } catch (Exception e) {
+                for (ImageFile curr_cont : contents) {
+                    d2.moveImageFile(curr_cont, d1, this);
+                }
+
+            }
+        }
+        if (directories.contains(d2)) {
+            directories.remove(d2);
+            d2.delFolder();
+        }
+
+    }
+
+
+}
