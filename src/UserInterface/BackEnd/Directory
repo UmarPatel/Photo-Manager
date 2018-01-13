@@ -1,0 +1,209 @@
+package UserInterface.Backend;
+
+import UserInterface.OperatingSystem;
+
+import java.io.File;
+import java.util.ArrayList;
+
+public class Directory {
+    private ArrayList<ImageFile> imageFileList;
+    private String name, oldName;
+    private ArrayList<Directory> directoryList;
+
+    public Directory(String name, ArrayList<ImageFile> imageList, ArrayList<Directory> directories) {
+        this.name = name;
+        oldName = "";
+        this.imageFileList = imageList;
+        this.directoryList = directories;
+        if (imageList == null) {
+            imageFileList = new ArrayList<>();
+
+        }
+        if (directories == null) {
+            directoryList = new ArrayList<>();
+        }
+        createFolder();
+
+    }
+
+    /**
+     * helper function to use when a new directory is added
+     * @param newDir
+     */
+    public void addDir(Directory newDir) {
+        directoryList.add(newDir);
+    }
+
+    /**
+     * sets the root
+     */
+    public void setRoot() {
+        oldName = name;
+        name = "root";
+        for (ImageFile curr : imageFileList) {
+            curr.changeDir("root");
+        }
+    }
+
+    /**
+     * releives the root
+     */
+    public void unsetRoot() {
+        name = oldName;
+        for (ImageFile curr : imageFileList) {
+            curr.changeDir(oldName);
+        }
+
+    }
+
+    /**
+     * returns the list of all possible directories
+     * @return list
+     */
+
+    public ArrayList<Directory> getDirList() {
+        return directoryList;
+    }
+
+    /**
+     * when a new root is chosen, chose a new root directory, adds any tags not in the list
+     that is in a directory under your root
+     */
+
+    void add_absent_tags() {
+        if (this.directoryList != null) {
+            for (Directory dir : this.directoryList) {
+                for (ImageFile img : dir.imageFileList) {
+                    for (String tag : img.tags) {
+                        img.addTag(tag);
+                    }
+                }
+                dir.add_absent_tags();
+            }
+        }
+
+    }
+
+    /**
+     * return all images within this directory
+     * @return list
+     */
+
+    ArrayList<ImageFile> allImages() {
+        ArrayList images = new ArrayList<ImageFile>();
+        if (this.directoryList != null) {
+            for (Directory dir : this.directoryList) {
+                images.add(this.imageFileList);
+                images.add(dir.allImages());
+            }
+        } else {
+            images.add(this.imageFileList);
+        }
+        return images;
+    }
+
+    /**
+     *
+     * @return the name of the string
+     */
+
+    public String toString() {
+        return this.name;
+    }
+
+    /**
+     *
+     * @return the name the of string
+     */
+
+    public String getName() {
+        return this.name;
+    }
+
+    public boolean isEmpty() {
+        return imageFileList.size() == 0;
+    }
+
+    public ArrayList viewImageFiles() {
+        /*
+        () -> List
+        View list of all imagefiles in the directory.
+         */
+
+        return imageFileList;
+
+    }
+
+    public void createFolder() {
+
+        new File("Directories/" + this.name).mkdirs();
+
+    }
+
+    public void delFolder() {
+        File index = new File("Directories/" + this.name);
+        deleteFolder(index);
+    }
+
+    //This was taken from https://stackoverflow.com/questions/7768071/how-to-delete-directory-content-in-java
+    private static void deleteFolder(File folder) {
+        File[] files = folder.listFiles();
+        if (files != null) { //some JVMs return null for empty dirs
+            for (File f : files) {
+                if (f.isDirectory()) {
+                    deleteFolder(f);
+                } else {
+                    f.delete();
+                }
+            }
+        }
+        folder.delete();
+    }
+
+    public void addImageFile(ImageFile imagefile, OperatingSystem OS) {
+        imageFileList.add(imagefile);
+    }
+
+    public void deleteImage(ImageFile imagefile, OperatingSystem OS) {
+      /*
+      just to delete the image after we move it
+      */
+        if (imageFileList.contains(imagefile)) {
+            int location = imageFileList.indexOf(imagefile);
+            imageFileList.remove(location);
+        }
+    }
+
+    public void moveImageFile(ImageFile file, Directory new_directory, OperatingSystem OS) {
+        /*
+        () -> null
+        Move imagefile from one directory to another.
+        check if imagfile is in imageFileList
+         */
+        if (imageFileList.contains(file)) {
+            // transfer file from current FileList to new FileList
+            (new File("Directories/" + name + "/" + file.toString())).renameTo(new File("Directories/" + new_directory.toString() + "/" + file.toString()));
+            int i = imageFileList.indexOf(file);
+            imageFileList.remove(i);
+            new_directory.imageFileList.add(file);
+            file.changeDir(new_directory.toString());
+            //i should never be -1 since that implies it doesnt exist
+
+        }
+    }
+
+    /**
+     * given an image, return the index of the next image
+     * @param currImg
+     * @return index of the next image, 0 if image does not exist
+     */
+
+    public int nextImage(ImageFile currImg) {
+        int indexNum = imageFileList.indexOf(currImg);
+        if (indexNum == imageFileList.size() - 1) {
+            return 0;
+        } else {
+            return indexNum + 1;
+        }
+    }
+}
