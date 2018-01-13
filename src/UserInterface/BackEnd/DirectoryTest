@@ -1,0 +1,49 @@
+package UserInterface.Backend;
+
+import UserInterface.OperatingSystem;
+import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.util.ArrayList;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class DirectoryTest {
+    @Test
+    void getNameTest1() throws IOException {
+        Directory d = new Directory("test", null, null);
+        assertEquals("test", d.getName());
+    }
+
+    @Test
+    void getNameTest2() throws IOException {
+        Directory d = new Directory("test", null, null);
+        assertFalse(d.getName().equals("testa"));
+    }
+
+    @Test
+    void isEmpty1() throws IOException {
+        Directory d = new Directory("test", null, null);
+        assertTrue(d.isEmpty());
+    }
+
+    @Test
+    void isEmpty2() throws IOException {
+        OperatingSystem OS;
+        OS = new OperatingSystem((ArrayList<Directory>) null);
+        ImageFile f = new ImageFile("test", "dir", OS);
+        Directory d = new Directory("test", null, null);
+        d.addImageFile(f, OS);
+        assertFalse(d.isEmpty());
+    }
+
+    @Test
+    void nextImage1() throws IOException {
+        OperatingSystem OS;
+        OS = new OperatingSystem((ArrayList<Directory>) null);
+        ImageFile f = new ImageFile("test", "dir", OS);
+        Directory d = new Directory("test", null, null);
+        assertEquals(d.nextImage(f), f);
+    }
+
+}
