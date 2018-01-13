@@ -1,0 +1,234 @@
+package UserInterface.Backend;
+
+import UserInterface.OperatingSystem;
+import javafx.scene.image.Image;
+
+import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+
+public class ImageFile {
+    private Image image;
+    private String name = "";
+    ArrayList<String> tags;
+    private ArrayList<String> history;
+    private String nametags = "";
+    private String path;
+    OperatingSystem OS;
+
+    public ImageFile(String name, String dirName, OperatingSystem new_os) {
+        OS = new_os;
+        this.name = name;
+        this.image = getImage(name);
+        tags = new ArrayList<>();
+        history = new ArrayList<>();
+        path = "Directories/" + dirName + "/";
+        new File(path + this.name + nametags).mkdirs();
+        (new File(name + ".jpg")).renameTo(new File(path + name + nametags + "/" + name + ".jpg"));
+    }
+
+    /**
+     * Move image temporarily to src to view
+     */
+    public void toSrc() {
+        (new File(path + name + nametags + "/" + name + ".jpg")).renameTo(new File(name + ".jpg"));
+    }
+
+    /**
+     * Move image back to its original position after view
+     */
+    public void moveBack() {
+        (new File(name + ".jpg")).renameTo(new File(path + name + nametags + "/" + name + ".jpg"));
+
+    }
+
+    /**
+     * Get the image
+     * @return returns the image of the selected filename in the GUI
+     */
+    public Image viewImage() {
+        return image;
+    }
+    /**
+     *Returns the name of the image
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * @return the string equivalent of the ImageFile
+     */
+    public String toString() {
+        return name + nametags;
+    }
+
+    /**
+     * @param name File name of the file to be deleted
+     */
+    private void delFolder(String name) {
+        File index = new File(name);
+        deleteFolder(index);
+    }
+
+    /**
+     *
+     * @param newDir change path of the ImageFile to the new directory
+     */
+    void changeDir(String newDir) {
+        path = "Directories/" + newDir + "/";
+    }
+
+    /** This was taken from https://stackoverflow.com/questions/7768071/how-to-delete-directory-content-in-java
+     * Delete the folder in the actual folder path
+     * @param folder the folder to be deleted
+     */
+    private static void deleteFolder(File folder) {
+        File[] files = folder.listFiles();
+        if (files != null) { //some JVMs return null for empty dirs
+            for (File f : files) {
+                if (f.isDirectory()) {
+                    deleteFolder(f);
+                } else {
+                    f.delete();
+                }
+            }
+        }
+        folder.delete();
+    }
+
+    /**
+     * Add the tag to ImageFile and change ImageFile name in the folder
+     * @param tag the tag to be added
+     */
+    public void addTag(String tag) {
+            /*
+            (String) -> null
+            Add a tag
+             */
+        if (tag != null && !(tags.contains(tag))) {
+            (new File(path + name + nametags + "/" + name + ".jpg")).renameTo(new File(name + ".jpg"));
+            delFolder(path + this.name + this.nametags);
+            history.add(nametags);
+            OS.addTag(tag);
+            tags.add(tag);
+            String s = nametags;
+            //put a space inbetween different tags
+            this.nametags += "@" + tag;
+            DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+            Date date = new Date();
+            OS.addLog("Old:" + this.name + s, "New:" + this.name + this.nametags, date.toString());
+            new File(path + this.name + this.nametags).mkdirs();
+            (new File(name + ".jpg")).renameTo(new File(path + name + nametags + "/" + name + ".jpg"));
+
+        }
+
+
+    }
+
+    /**
+     * deletes the tag and renames the ImageFile to without the tag
+     * @param tag the tag to be deleted
+     */
+    public void deleteTag(String tag) {
+            /*
+            (String) ->
+            Delete a tag
+             */
+        (new File(path + name + nametags + "/" + name + ".jpg")).renameTo(new File(name + ".jpg"));
+        delFolder(path + this.name + this.nametags);
+        history.add(nametags);
+        tags.remove(tag);
+        nametags = "";
+        String s = nametags;
+        for (String curr : tags) {
+            this.nametags += "@" + curr;
+
+        }
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        Date date = new Date();
+        OS.addLog("Old:" + this.name + s, "New:" + this.name + this.nametags, date.toString());
+        new File(path + this.name + this.nametags).mkdirs();
+        (new File(name + ".jpg")).renameTo(new File(path + name + nametags + "/" + name + ".jpg"));
+    }
+
+    /**
+     * Returns the history of all names this ImageFile has ever had
+     * @return arraylist of previous names of the ImageFile
+     */
+    public ArrayList history() {
+        /*
+        () -> Arraylist
+        returns list of names historically
+        [version number, tags]
+         */
+        return history;
+    }
+
+    /**
+     * Reverse the ImageFile name to a numbered version in the arraylist of previous names
+     * @param i the version to be reverted to
+     */
+    public void reverse(int i) {
+        /*
+        (int) -> String
+        returns the history of name by number
+         */
+        if (history.size() > 2 && history.size() > i) {
+            (new File(path + name + nametags + "/" + name + ".jpg")).renameTo(new File(name + ".jpg"));
+            delFolder(path + this.name + this.nametags);
+            DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+            Date date = new Date();
+            OS.addLog("Old:" + nametags, "Revert back to:" + history.get(i), date.toString());
+            nametags = history.get(i);
+            new File(path + this.name + this.nametags).mkdirs();
+            (new File(name + ".jpg")).renameTo(new File(path + name + nametags + "/" + name + ".jpg"));
+        }
+
+
+    }
+
+    /**
+     * Get the image given the name of the wanted image
+     * @param name the name of the image
+     * @return returns the image of the ImageFile
+     */
+    private Image getImage(String name) {
+        name = name + ".jpg";
+        Image image = null;
+        try {
+            image = new Image(name);
+        } catch (Exception ignored) {
+        }
+        return image;
+    }
+
+    /**
+     * Rename the ImageFile and also change the name in the folder
+     * @param newName the new name of the ImageFile
+     */
+    public void rename(String newName) {
+        (new File(path + name + nametags + "/" + name + ".jpg")).renameTo(new File(name + ".jpg"));
+        delFolder(path + this.name + this.nametags);
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        Date date = new Date();
+        OS.addLog("Old:" + this.name, "New:" + newName, date.toString());
+        String[] tokens = newName.split("@");
+        if (!tokens[0].equals(this.name)) {
+            history = new ArrayList<>();
+            tags = new ArrayList<>();
+            nametags = "";
+        }
+        for (int i = 0; i < tokens.length; i++) {
+            if (i == 0) {
+                this.name = tokens[i];
+            } else {
+                this.addTag(tokens[i]);
+            }
+        }
+        new File(path + this.name + this.nametags).mkdirs();
+        (new File(name + ".jpg")).renameTo(new File(path + name + nametags + "/" + name + ".jpg"));
+    }
+}
