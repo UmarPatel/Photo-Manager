@@ -1,0 +1,160 @@
+//
+// Source code recreated from a .class file by IntelliJ IDEA
+// (powered by Fernflower decompiler)
+//
+
+import UserInterface.AlertBox;
+import UserInterface.Backend.Directory;
+import UserInterface.Backend.ImageFile;
+import UserInterface.DirectoryView;
+import UserInterface.OperatingSystem;
+import javafx.application.Application;
+import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.stage.Stage;
+
+import java.util.ArrayList;
+
+public class Main extends Application {
+    private OperatingSystem OS;
+    private ListView<Directory> listView;
+    private TextField name;
+    private Directory root = null;
+
+    public Main() {
+    }
+
+    // Adapted from https://github.com/buckyroberts/Source-Code-from-Tutorials/tree/master/JavaFX. Retrieved Nov. 10
+    public static void main(String[] args) {
+        launch(args);
+    }
+
+    public void start(Stage primaryStage) throws Exception {
+        /* Set up the layout for GUI
+         */
+        this.listView = new ListView<Directory>();
+        this.listView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        primaryStage.setTitle("Operating System");
+        Label label = new Label("Directories");
+        label.setFont(new Font("Arial", 20));
+        Button directory = new Button("View Directory");
+        Button tag = new Button("View Tag List");
+        Button log = new Button("View Rename Log");
+        Button create = new Button("Create Directory");
+        Button delete = new Button("Delete Directory");
+        Button merge = new Button("Merge Directories");
+        this.name = new TextField();
+        this.name.setPromptText("Create Directory:");
+        this.OS = new OperatingSystem((ArrayList<Directory>) null);
+        ArrayList<ImageFile> pics = new ArrayList<>();
+        /*Add default directories for showcasing GUI
+         */
+        ImageFile Pic1 = new ImageFile("Pic1", "default 1", OS);
+        Pic1.addTag("tag1");
+        Pic1.addTag("tag2");
+        pics.add(Pic1);
+        ArrayList<ImageFile> pics2 = new ArrayList<>();
+        ImageFile Pic2 = new ImageFile("Pic2", "default 3", OS);
+        Pic2.addTag("tag1");
+        Pic2.addTag("tag2");
+        pics2.add(Pic2);
+        Pic2.rename("Pic2@lol");
+        this.OS.createDirectory("default 1", pics);
+        this.OS.createDirectory("default 2", null);
+        this.OS.createDirectory("default 3", pics2);
+        ArrayList directories = this.OS.viewDirectory();
+        for (Object directory1 : directories) {
+            Directory d = (Directory) directory1;
+            this.listView.getItems().add(d);
+        }
+        directory.setOnAction((e) -> {
+            this.view();
+        });
+        tag.setOnAction((e) -> {
+            this.viewTags();
+        });
+        log.setOnAction((e) -> {
+            this.viewLog();
+        });
+        create.setOnAction((e) -> {
+            this.createDir();
+        });
+        delete.setOnAction((e) -> {
+            this.delDir();
+        });
+        merge.setOnAction((e) -> {
+            this.mergeDir();
+        });
+        VBox layout = new VBox(10.0D);
+        layout.setPadding(new Insets(20.0D, 20.0D, 20.0D, 20.0D));
+        layout.getChildren().addAll(new Node[]{label, this.listView, directory, tag, log, delete, merge, create, this.name});
+        Scene scene = new Scene(layout, 500.0D, 500.0D);
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+    /**
+     * Open the directory in the GUI
+     */
+    private void view() {
+        ObservableList<Directory> selected = this.listView.getSelectionModel().getSelectedItems();
+        new DirectoryView(selected, OS);
+
+
+    }
+
+    /**
+     * Merge two directories in the GUI
+     */
+    private void mergeDir() {
+        ObservableList<Directory> selected = this.listView.getSelectionModel().getSelectedItems();
+        if (selected.size() == 2) {
+            OS.merge(selected.get(0), selected.get(1));
+            this.listView.getItems().removeAll(selected.get(1));
+
+        }
+
+
+    }
+
+    /**
+     * Create directory in the GUI
+     */
+    private void createDir() {
+        if (this.name.getText().equals("")) {
+            AlertBox.displayText("Warning", "Cannot create folder with blank name");
+        } else if (this.OS.search(this.name.getText()) == null && !this.name.getText().equals("")) {
+            Directory new_dir = new Directory(this.name.getText(), (ArrayList<ImageFile>) null, null);
+            this.OS.createDirectory(this.name.getText(), null);
+            this.listView.getItems().add(new_dir);
+        }
+
+    }
+
+    /**
+     * View the log of all file renames in the GUI
+     */
+    private void viewLog() {
+        AlertBox.displayLog("log", OS.get_log());
+    }
+
+    /**
+     * Delete a directory in the GUI
+     */
+    private void delDir() {
+        ObservableList<Directory> selected = this.listView.getSelectionModel().getSelectedItems();
+        OS.deleteDirectory(selected);
+        this.listView.getItems().removeAll(selected);
+    }
+    /**
+     * view all tags in all instances of the program
+     */
+    private void viewTags() {
+        // Have to fix
+        AlertBox.displayTags("tags", OS.tags);
+    }
+}
