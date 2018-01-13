@@ -1,0 +1,302 @@
+package UserInterface;
+
+import UserInterface.Backend.Directory;
+import UserInterface.Backend.ImageFile;
+import UserInterface.Backend.RootDirectory;
+import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.stage.Stage;
+
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+
+public class DirectoryView {
+    private Directory model;
+    Image image;
+    private Scene scene1, scene2;
+    private ListView listView1, dirView;
+    // Will be buffered images when that works
+    private ListView listView2, multTags;
+    ArrayList<BufferedImage> images;
+    private TextField dbox, version;
+    private Stage new_window;
+    private ObservableList<Directory> reopen;
+    private OperatingSystem OS;
+    private ComboBox<String> comboBox, deleteBox, directoryBox;
+    private RootDirectory root;
+
+    // Adapted from https://github.com/buckyroberts/Source-Code-from-Tutorials/tree/master/JavaFX. Retrieved Nov. 10
+    public DirectoryView(ObservableList<Directory> selected, OperatingSystem new_os) {
+        reopen = selected;
+        OS = new_os;
+        for (Directory me : selected) {
+            model = me;
+        }
+        /*
+        Setup the layout for GUI
+         */
+        if (selected.size() != 0) {
+            new_window = new Stage();
+            new_window.setTitle(selected.toString());
+            Label label1 = new Label("Images");
+            Label label2 = new Label("ImageFiles");
+            label1.setFont(new Font("Arial", 20));
+            label2.setFont(new Font("Arial", 20));
+            this.listView1 = new ListView();
+            this.listView1.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+            this.listView2 = new ListView();
+            this.listView2.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+            this.multTags = new ListView();
+            this.multTags.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+            this.dirView = new ListView();
+            this.dirView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+
+            Button view = new Button("View Image");
+
+            Button delete = new Button("Delete Image");
+            Button rename = new Button("Rename Image");
+            Button view_imagefiles = new Button("View ImageFile list");
+            Button viewDir = new Button("View Directory");
+            Button move = new Button("Move ImageFile");
+            Button addTag = new Button("Add tag");
+            Button deleteTag = new Button("Delete tag");
+            Button reverse = new Button("Reverse tags history");
+            Button viewHistory = new Button("View previous tags");
+            Button view_images = new Button("View Image list");
+
+            TextField name = new TextField();
+            name.setPromptText("Add tag or delete tag by entering tag name then pressing 'add tag' or 'delete tag'");
+
+
+            this.dbox = new TextField();
+            this.dbox.setPromptText("Rename to....");
+            this.version = new TextField();
+            this.version.setPromptText("Revert to version...");
+
+            comboBox = new ComboBox<>();
+            comboBox.getItems().addAll(OS.tags);
+            comboBox.setEditable(true);
+            comboBox.setPromptText("Add Tag");
+
+            deleteBox = new ComboBox<>();
+            deleteBox.setPromptText("Delete Tag");
+            deleteBox.getItems().addAll(OS.tags);
+
+            directoryBox = new ComboBox<>();
+            directoryBox.setPromptText("Move file to directory...");
+            for (Object curr : OS.directories) {
+                directoryBox.getItems().add(curr.toString());
+            }
+
+
+            ArrayList imagefs = model.viewImageFiles();
+            if (imagefs != null) {
+                listView2.getItems().addAll(imagefs);
+                listView1.getItems().addAll(imagefs);
+            }
+            multTags.getItems().addAll(OS.tags);
+            dirView.getItems().addAll(model.getDirList());
+
+            view_imagefiles.setOnAction((e) -> {
+                new_window.setScene(scene2);
+            });
+            view_images.setOnAction((e) -> {
+                new_window.setScene(scene1);
+            });
+            delete.setOnAction((e) -> {
+                deleteImage();
+            });
+            view.setOnAction((e) -> {
+                viewImage();
+            });
+            rename.setOnAction((e) -> {
+                renameImage();
+            });
+            reverse.setOnAction((e) -> {
+                reverseName();
+            });
+            viewHistory.setOnAction((e) -> {
+                viewHistory();
+            });
+            move.setOnAction((e) -> {
+                moveImageFile();
+            });
+            addTag.setOnAction((e) -> {
+                addTag();
+            });
+            deleteTag.setOnAction((e) -> {
+                delTag();
+            });
+            viewDir.setOnAction((e) -> {
+                viewDir();
+            });
+
+
+            VBox layout1 = new VBox(10.0D);
+            layout1.setPadding(new Insets(20.0D, 20.0D, 20.0D, 20.0D));
+            layout1.getChildren().addAll(new Node[]{label1, view_imagefiles, this.listView1, view, delete, dbox, rename});
+            VBox layout2 = new VBox(10.0D);
+            layout2.setPadding(new Insets(20.0D, 20.0D, 20.0D, 20.0D));
+            layout2.getChildren().addAll(new Node[]{label2, view_images, this.listView2, multTags, comboBox, addTag, deleteBox, deleteTag, viewHistory, version, reverse, directoryBox, move});
+            scene1 = new Scene(layout1, 500.0D, 500.0D);
+            scene2 = new Scene(layout2, 500.0D, 500.0D);
+            new_window.setScene(scene2);
+            new_window.show();
+        } else {
+            AlertBox.displayText("Warning", "Select a folder to view");
+        }
+    }
+
+    /**
+     * Deletes an image from the GUI and calls ImageFile to delete the image in the folder
+     */
+    private void deleteImage() {
+        ObservableList<ImageFile> selected = this.listView1.getSelectionModel().getSelectedItems();
+        for (ImageFile curr : selected) {
+            model.deleteImage(curr, OS);
+        }
+        new_window.close();
+        new DirectoryView(reopen, OS);
+    }
+
+    /**
+     * View the sub directory in a new window
+     */
+    private void viewDir() {
+        ObservableList<Directory> selected = this.dirView.getSelectionModel().getSelectedItems();
+        new DirectoryView(selected, OS);
+    }
+
+    /**
+     * View the selected image in a new window if it exists
+     */
+    private void viewImage() {
+        ObservableList<ImageFile> selected = this.listView1.getSelectionModel().getSelectedItems();
+        for (ImageFile curr : selected) {
+            Button next = new Button("Next Image");
+            Stage picStage = new Stage();
+            HBox pane = new HBox(150);
+            curr.toSrc();
+            String imagename = curr.getName() + ".jpg";
+            curr.moveBack();
+            next.setOnAction((e) -> {
+                int new_num = model.nextImage(curr);
+                this.listView1.getSelectionModel().clearSelection();
+                this.listView1.getSelectionModel().select(new_num);
+                viewImage();
+                picStage.close();
+
+
+            });
+            Image image = new Image(imagename);
+            pane.getChildren().addAll(next, new ImageView(image));
+            Scene scene = new Scene(pane, 1080, 720);
+            picStage.setScene(scene);
+            picStage.show();
+        }
+
+
+    }
+
+    /**
+     * rename the image file and relevant tags then calls ImageFile to rename the image in the folder
+     */
+    private void renameImage() {
+        ObservableList<ImageFile> selected = this.listView1.getSelectionModel().getSelectedItems();
+        for (ImageFile curr : selected) {
+            curr.rename(dbox.getText());
+        }
+
+        new_window.close();
+        new DirectoryView(reopen, OS);
+    }
+    /**
+     * Add tag to ImageFile and rename the ImageFile in the folder to include the tag
+     */
+    private void addTag() {
+        ObservableList<ImageFile> selected = this.listView2.getSelectionModel().getSelectedItems();
+        ObservableList<String> myTags = multTags.getSelectionModel().getSelectedItems();
+        for (ImageFile curr : selected) {
+            for (String curr2 : myTags) {
+                curr.addTag(curr2);
+            }
+            curr.addTag(comboBox.getValue());
+        }
+        new_window.close();
+        new DirectoryView(reopen, OS);
+
+
+    }
+
+    /**
+     * remove tag from ImageFile and change ImageFil name to not include the tag
+     */
+    private void delTag() {
+        ObservableList<ImageFile> selected = this.listView2.getSelectionModel().getSelectedItems();
+        for (ImageFile curr : selected) {
+            curr.deleteTag(deleteBox.getValue());
+        }
+        new_window.close();
+        new DirectoryView(reopen, OS);
+    }
+
+    /**
+     * Reverse the name of the ImageFile to an earlier version and change the ImageFile name in the folder as well
+     */
+    private void reverseName() {
+        ObservableList<ImageFile> selected = this.listView2.getSelectionModel().getSelectedItems();
+        boolean string = false;
+        try {
+            Integer.parseInt(version.getText());
+            string = true;
+        } catch (Exception e) {
+            AlertBox.displayText("Error", "Version must be an integer");
+        }
+        if (string) {
+            for (ImageFile curr : selected) {
+                curr.reverse(Integer.parseInt(version.getText()));
+            }
+            new_window.close();
+            new DirectoryView(reopen, OS);
+        }
+    }
+
+    /**
+     * View the history of all tags the ImageFile has ever been named in a new window
+     */
+    private void viewHistory() {
+        ObservableList<ImageFile> selected = this.listView2.getSelectionModel().getSelectedItems();
+        ArrayList<String> hist = null;
+        for (ImageFile curr : selected) {
+            hist = curr.history();
+        }
+        if (hist != null) {
+            AlertBox.display("history", hist);
+        } else {
+            AlertBox.displayText("Warning", "Select file to view history");
+        }
+    }
+
+    /**
+     * Move an ImageFile from one directory to another one then calls the Directory class to move the relevant
+     * file to the new folder
+     */
+    private void moveImageFile() {
+        ObservableList<ImageFile> selected = this.listView2.getSelectionModel().getSelectedItems();
+        for (ImageFile curr : selected) {
+            model.moveImageFile(curr, OS.search(directoryBox.getValue()), OS);
+        }
+        new_window.close();
+        new DirectoryView(reopen, OS);
+    }
+
+}
+
