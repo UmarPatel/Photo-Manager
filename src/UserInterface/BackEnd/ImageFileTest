@@ -1,0 +1,88 @@
+package UserInterface.Backend;
+
+import UserInterface.OperatingSystem;
+import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.util.ArrayList;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class ImageFileTest {
+
+    @Test
+    void getNameTest1() throws IOException {
+        OperatingSystem OS;
+        OS = new OperatingSystem((ArrayList<Directory>) null);
+        ImageFile f = new ImageFile("test", "dir", OS);
+        assertEquals("test", f.getName());
+    }
+
+    @Test
+    void getNameTest2() throws IOException {
+        OperatingSystem OS;
+        OS = new OperatingSystem((ArrayList<Directory>) null);
+        ImageFile f = new ImageFile("test", "dir", OS);
+        assertFalse(f.getName().equals("testa"));
+    }
+
+    @Test
+    void history1() throws IOException {
+        OperatingSystem OS;
+        OS = new OperatingSystem((ArrayList<Directory>) null);
+        ImageFile f = new ImageFile("test", "dir", OS);
+        f.addTag("asd");
+        f.addTag("b");
+        assertTrue(f.history().contains("b"));
+
+    }
+
+    @Test
+    void history2() throws IOException {
+        OperatingSystem OS;
+        OS = new OperatingSystem((ArrayList<Directory>) null);
+        ImageFile f = new ImageFile("test", "dir", OS);
+        f.addTag("asd");
+        f.addTag("123");
+        assertFalse(f.history().contains("1234"));
+    }
+
+    @Test
+    void addTag1() throws IOException {
+        OperatingSystem OS;
+        OS = new OperatingSystem((ArrayList<Directory>) null);
+        ImageFile f = new ImageFile("test", "dir", OS);
+        f.addTag("asd");
+        assertEquals("asd", OS.tags.get(0));
+    }
+
+    @Test
+    void addTag2() throws IOException {
+        OperatingSystem OS;
+        OS = new OperatingSystem((ArrayList<Directory>) null);
+        ImageFile f = new ImageFile("test", "dir", OS);
+        f.addTag("asd");
+        assertTrue(f.history().contains("asd"));
+    }
+
+    @Test
+    void deleteTag1(String tag) throws IOException {
+        OperatingSystem OS;
+        OS = new OperatingSystem((ArrayList<Directory>) null);
+        ImageFile f = new ImageFile("test", "dir", OS);
+        f.addTag("asd");
+        f.deleteTag("asd");
+        assertTrue(f.history().contains("asd"));
+    }
+
+    @Test
+    void deleteTag2() throws IOException {
+        OperatingSystem OS;
+        OS = new OperatingSystem((ArrayList<Directory>) null);
+        ImageFile f = new ImageFile("test", "dir", OS);
+        f.addTag("asd");
+        f.deleteTag("asd");
+        assertTrue(!f.tags.contains("asd"));
+    }
+
+}
